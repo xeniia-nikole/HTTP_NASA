@@ -1,6 +1,10 @@
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -11,6 +15,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -43,9 +48,14 @@ public class Main {
             mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
             List<NASAData> jsonNasaData = mapper.readValue(response.getEntity().getContent(), new TypeReference<>() {
             });
-            // вывод в консоль jsonNasaData:
-            System.out.println("\n\nAll data:\n");
-            jsonNasaData.forEach(System.out::println);
+            // запись в файл
+            String json = listToJson(jsonNasaData);
+            try (FileWriter file = new FileWriter("ImageData.json")) {
+                file.write(json);
+                file.flush();
+            } catch (IOException io) {
+                io.printStackTrace();
+            }
 
             // url из прочитанного json:
             String JPG_URL = jsonNasaData.get(0).getUrl();
@@ -89,5 +99,13 @@ public class Main {
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    private static String listToJson(List<NASAData> list) {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(list);
+        JsonParser jp = new JsonParser();
+        JsonElement je = jp.parse(json);
+        return gson.toJson(je);
     }
 }
