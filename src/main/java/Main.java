@@ -7,6 +7,8 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -33,8 +35,40 @@ public class Main {
         // вывод полученных заголовков
         Arrays.stream(response.getAllHeaders()).forEach(System.out::println);
         // чтение тела ответа
-        NASAData nasa = mapper.readValue(response.getEntity().getContent(), NASAData.class);
-        System.out.println(nasa.getUrl());
+        NASAData nasaData = mapper.readValue(response.getEntity().getContent(), NASAData.class);
+        //url из json
+        String jpg_url = nasaData.getUrl();
 
+        // запрос по ссылке изображения
+        HttpGet requestUrl = new HttpGet(jpg_url);
+        CloseableHttpResponse responseUrl = httpClient.execute(requestUrl);
+        // вывод заголовков
+        Arrays.stream(responseUrl.getAllHeaders()).forEach(System.out::println);
+
+        // чтение тела ответа
+        byte[] bytes = response.getEntity().getContent().readAllBytes();
+
+        // создание файла
+        String fileName = jpg_url.substring(jpg_url.lastIndexOf("/") + 1);
+        createFile(fileName);
+
+        // запись в файл
+        try (FileOutputStream fos = new FileOutputStream(fileName, false)) {
+            fos.write(bytes, 0, bytes.length);
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+    public static void createFile(String nameFile) {
+        File newFile = new File(nameFile);
+        try {
+            if (newFile.createNewFile()) {
+                System.out.println("\n\nНовый файл'" + nameFile + "'.");
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
     }
 }
