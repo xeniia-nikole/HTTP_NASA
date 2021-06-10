@@ -48,6 +48,7 @@ public class Main {
             mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
             List<NASAData> jsonNasaData = mapper.readValue(response.getEntity().getContent(), new TypeReference<>() {
             });
+            
             // запись в файл
             String json = listToJson(jsonNasaData);
             try (FileWriter file = new FileWriter("ImageData.json")) {
