@@ -13,10 +13,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 
@@ -50,9 +47,13 @@ public class Main {
             });
             
             // запись в файл
+            String jsonText = readString().replaceAll("[\\p{Ps}\\p{Pe}]","");
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(jsonText);
             String json = listToJson(jsonNasaData);
+            stringBuilder.append(json);
             try (FileWriter file = new FileWriter("ImageData.json")) {
-                file.write(json);
+                file.write(String.valueOf(stringBuilder));
                 file.flush();
             } catch (IOException io) {
                 io.printStackTrace();
@@ -100,6 +101,21 @@ public class Main {
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    private static String readString() {
+        String json = null;
+        StringBuilder stringBuilder = new StringBuilder();
+        String str;
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader("ImageData.json"))) {
+            while ((str = bufferedReader.readLine()) != null) {
+                stringBuilder.append(str);
+            }
+            json = stringBuilder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return json;
     }
 
     private static String listToJson(List<NASAData> list) {
