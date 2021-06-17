@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -47,13 +48,12 @@ public class Main {
             });
             
             // запись в файл
-            String jsonText = readString().replaceAll("[\\p{Ps}\\p{Pe}]","");
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append(jsonText);
+            String previousText = readString();
+            List<NASAData> nasaDataListPrevious = jsonToList(previousText);
+            jsonNasaData.addAll(nasaDataListPrevious);
             String json = listToJson(jsonNasaData);
-            stringBuilder.append(json);
             try (FileWriter file = new FileWriter("ImageData.json")) {
-                file.write(String.valueOf(stringBuilder));
+                file.write(json);
                 file.flush();
             } catch (IOException io) {
                 io.printStackTrace();
@@ -75,7 +75,7 @@ public class Main {
             byte[] bytes = response.getEntity().getContent().readAllBytes();
 
             // имя файла
-            String fileName = "C:/Users/User/Desktop/" + JPG_URL.substring(JPG_URL.lastIndexOf("/") + 1);
+            String fileName = "C:\\Users\\User\\Pictures\\Saved Pictures\\" + JPG_URL.substring(JPG_URL.lastIndexOf("/") + 1);
 
             // создание файла
             createFile(fileName);
@@ -103,6 +103,14 @@ public class Main {
         }
     }
 
+    private static String listToJson(List<NASAData> list) {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(list);
+        JsonParser jp = new JsonParser();
+        JsonElement je = jp.parse(json);
+        return gson.toJson(je);
+    }
+
     private static String readString() {
         String json = null;
         StringBuilder stringBuilder = new StringBuilder();
@@ -118,11 +126,7 @@ public class Main {
         return json;
     }
 
-    private static String listToJson(List<NASAData> list) {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String json = gson.toJson(list);
-        JsonParser jp = new JsonParser();
-        JsonElement je = jp.parse(json);
-        return gson.toJson(je);
+    private static List<NASAData> jsonToList(String jsonText) {
+        return new Gson().fromJson(jsonText, new TypeToken<List<NASAData>>(){}.getType());
     }
 }
